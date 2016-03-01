@@ -321,9 +321,11 @@ static int do_verify(GMainLoop *loop, pam_handle_t *pamh, DBusGProxy *dev, gbool
 		GSource *source;
 
 		/* Set up the timeout on our non-default context */
-		source = g_timeout_source_new_seconds (timeout);
-		g_source_attach (source, g_main_loop_get_context (loop));
-		g_source_set_callback (source, verify_timeout_cb, data, NULL);
+        if (timeout > 0) {
+		    source = g_timeout_source_new_seconds (timeout);
+		    g_source_attach (source, g_main_loop_get_context (loop));
+		    g_source_set_callback (source, verify_timeout_cb, data, NULL);
+        }
 
 		data->timed_out = FALSE;
 
@@ -462,7 +464,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc,
 			}
 			else if (strncmp(argv[i], TIMEOUT_MATCH, strlen (TIMEOUT_MATCH)) == 0 && strlen(argv[i]) <= strlen (TIMEOUT_MATCH) + 2) {
 				timeout = atoi (argv[i] + strlen (TIMEOUT_MATCH));
-				if (timeout < 10)
+				if (timeout < 10 && timeout > 0)
 					timeout = DEFAULT_TIMEOUT;
 				D(pamh, "timeout specified as: %d", timeout);
 			}
